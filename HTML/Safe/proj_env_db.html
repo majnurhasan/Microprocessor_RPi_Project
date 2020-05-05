@@ -1,0 +1,110 @@
+<html lang="en">
+  <head>
+    <!-- Basic Page Needs
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta charset="utf-8">
+    <title>Lab Conditions by RPi</title>
+    <meta name="description" content="Lab conditions - RPi">
+    <meta name="author" content="Peter Dalmaris">
+    <!-- Mobile Specific Metas
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- FONT
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+    <!-- CSS
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="stylesheet" href="/static/css/normalize.css">
+    <link rel="stylesheet" href="/static/css/skeleton.css">
+    <!-- Favicon
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="icon" type="image/png" href="/static/images/favicon.png">
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="one-third column" style="margin-top: 5%">
+          <strong>Showing all records</strong>    
+          <h2>Daily Readings</h2>
+            <table class="u-full-width">
+              <thead>
+                <tr>
+                  <th style="text-align:center">Date</th>
+                  <th style="text-align:center">Number of Mosquitoes</th>                        
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in daiReadings %}
+                <tr>
+                  <td style="text-align:center">{{row[0]}}</td>
+                  <td style="text-align:center">{{row[1]}}</td>
+                </tr>          
+                {% endfor %}
+              </tbody>
+            </table>            
+          <h2>Mosquito Readings</h2>                    
+            <table class="u-full-width">
+              <thead>
+                <tr>
+		              <th style="text-align:center">EventID</th>
+                  <th style="text-align:center">Date and Time</th>                        
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in mosReadings %}
+                <tr>
+                  <td style="text-align:center">{{row[0]}}</td>
+                  <td style="text-align:center">{{row[1]}}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>                                                
+        </div>
+        <!-- Google Charts Code start -->
+      <div class="two-thirds column" style="margin-top: 5%">
+        <div class="row">                  
+          <div class="row">
+            <div class="three columns">
+              <div id="chart_daiReads"></div>
+            </div>
+          </div>
+        </div>     
+      </div>
+      <!-- Google Charts Code end -->
+    </div>           
+  </body>
+  <!-- Google Charts JS start -->
+  <script type="text/javascript" src="https://www.google.com/jsapi?autoload={'modules':[{'name':'visualization','version':'1','packages':['corechart']}]}"></script>
+
+  <script>
+    google.load('visualization', '1', {packages: ['corechart']});
+    google.setOnLoadCallback(drawChart);
+    function drawChart() {
+      var data = new google.visualization.DataTable();
+      data.addColumn('datetime', 'Date');  
+      data.addColumn('number', 'Number Of Mosquitoes');      
+      data.addRows([
+          {% for row in daiReadings %} 
+            [new Date({{row[0][0:4]}},{{row[0][5:7]}},{{row[0][8:10]}}),{{row[1]}}],
+          {% endfor %}
+        ]);
+
+      var options = {
+        width: 700,
+        height: 600,
+        hAxis: {
+          title: "Date",
+          gridlines: { count: {{dai_items}}, color: '#CCC' },
+          format: 'dd-MMM-yyyy' },
+        vAxis: {
+          title: 'Number of Mosquitoes'
+        },
+        title: 'Daily Readings',
+        curveType: 'function'  //Makes line curved
+      };
+      var chart = new google.visualization.LineChart(document.getElementById('chart_daiReads'));
+      chart.draw(data, options);
+    }
+  </script>
+  <!-- Google Charts JS end -->
+</html>

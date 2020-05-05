@@ -1,0 +1,164 @@
+<html lang="en">
+  <head>
+    <!-- Basic Page Needs
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta charset="utf-8">
+    <title>Data and Graph</title>
+    <meta name="description" content="Lab conditions - RPi">
+    <meta name="author" content="Peter Dalmaris">
+    <!-- Mobile Specific Metas
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- FONT
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+    <!-- CSS
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="stylesheet" href="/static/css/main.css" />
+    <noscript><link rel="stylesheet" href="/static/css/noscript.css" /></noscript>
+    <!-- Favicon
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="icon" type="image/png" href="/static/images/favicon.png">
+  </head>
+  <body>
+    <div class="container">
+      <!-- Datetimepicker form start -->
+          <form id="datetime_range" action="/proj_env_db" method="GET"> 
+            <section id="one" class="wrapper">
+              <div class="row aln-center">
+                <div class="three columns">
+                  <label for="from" style="text-align:center">From Date</label>
+                  <input class="u-full-width" id="datetimepicker1" type="text" value="{{from_date}}" name="from">
+                </div>        
+                <div class="three columns">
+                  <label for="to" style="text-align:center">To Date</label>           
+                  <input class="u-full-width" id="datetimepicker2" type="text" value="{{to_date}}" name="to">
+                </div>           
+                <div class="two columns">           
+                  <input class="button-primary" type="submit" value="Submit" style="position:relative; top: 28px" id="submit_button" />
+                </div>     
+              </div>
+            </section>
+          </form> 
+      <div class="row aln-center">
+          <h2 style="text-align:center">Daily Readings</h2>
+      </div>
+      <!-- Datetimepicker form end -->
+      <div class="row aln-center">
+        <div class="one-third column">  
+            <table class="u-full-width">
+              <thead>
+                <tr>
+                  <th style="text-align:center">Date</th>
+                  <th style="text-align:center">Number of Mosquitoes</th>                        
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in daiReadings %}
+                <tr>
+                  <td style="text-align:center">{{row[0]}}</td>
+                  <td style="text-align:center">{{row[1]}}</td>
+                </tr>          
+                {% endfor %}
+              </tbody>
+            </table>                                                          
+        </div>
+      <!-- Google Charts Code start -->
+      <div class="one-third column">
+              <div id="chart_daiReads"></div> 
+      </div>
+      <!-- Google Charts Code end -->
+    </div>
+    <div class="row aln-center" style="margin-top: 6%">
+        <h2 style="text-align:center">List of Individual Mosquito Readings</h2>
+    </div>
+    <div class="row aln-center">
+        <div class="one-third column">
+            <table class="u-full-width" style="scroll-behavior: smooth">
+                <thead>
+                  <tr>
+                    <th style="text-align:center">EventID</th>
+                    <th style="text-align:center">Date and Time</th>                        
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in mosReadings %}
+                  <tr>
+                    <td style="text-align:center">{{row[0]}}</td>
+                    <td style="text-align:center">{{row[1]}}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+            </table>      
+        </div>
+    </div>   
+    <div class="row aln-center" style="margin-bottom: 3%">
+        <ul class="actions special">
+            <li><a href="index" class="button primary icon fa-mail-reply">Go Back</a></li>
+        </ul>
+    </div>        
+  </body>
+
+  <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+  <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+
+  <!-- Datetimepicker files start -->
+  <link rel="stylesheet" type="text/css" href="/static/css/jquery.datetimepicker.css"/ >
+  <script src="/static/javascript/jquery.datetimepicker.js"></script>
+  <script>
+    jQuery('#datetimepicker1').datetimepicker(
+      {
+        format:'Y-m-d H:i',
+        defaultDate:'{{from_date}}'
+      });
+    jQuery('#datetimepicker2').datetimepicker({
+        format:'Y-m-d H:i',
+        defaultDate:'{{to_date}}'
+      });
+      jQuery("#range_select input[type=radio]").click(function(){ 
+        jQuery("#range_select").submit();
+      });
+  </script>
+  <!-- Datetimepicker files end -->
+
+  <script>
+      jQuery("#range_select input[type=radio]").click(function(){
+        jQuery("#range_select").submit();
+      });
+  </script>
+
+  <!-- Google Charts JS start -->
+  <script type="text/javascript" src="https://www.google.com/jsapi?autoload={'modules':[{'name':'visualization','version':'1','packages':['corechart']}]}"></script>
+
+  <script>
+    google.load('visualization', '2', {packages: ['corechart']});
+    google.setOnLoadCallback(drawChart);
+    function drawChart() {
+      var data = new google.visualization.DataTable();
+      data.addColumn('datetime', 'Date');  
+      data.addColumn('number', 'Number Of Mosquitoes');      
+      data.addRows([
+          {% for row in daiReadings %} 
+            [new Date({{row[0][0:4]}},{{row[0][5:7]}},{{row[0][8:10]}}),{{row[1]}}],
+          {% endfor %}
+        ]);
+
+      var options = {
+        width: 750,
+        height: 350,
+        hAxis: {
+          title: "Date",
+          gridlines: { count: {{dai_items}}, color: '#CCC' },
+          format: 'dd-MMM-yyyy' },
+        vAxis: {
+          title: 'Number of Mosquitoes'
+        },
+        title: 'Peak Records of Daily Mosquito Count',
+        curveType: 'function'  //Makes line curved
+      };
+      var chart = new google.visualization.LineChart(document.getElementById('chart_daiReads'));
+      chart.draw(data, options);
+    }
+  </script>
+  <!-- Google Charts JS end -->
+</html>
